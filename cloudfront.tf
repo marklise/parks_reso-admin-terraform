@@ -23,6 +23,16 @@ resource "aws_cloudfront_origin_access_identity" "parks-reso-admin-oai" {
   comment = "Cloud front OAI for BC Parks reservations admin delivery"
 }
 
+# cloudfront functions providing api location for front-ends.
+resource "aws_cloudfront_function" "api-header-configuration-admin" {
+  name    = "api-header-configuration-admin"
+  runtime = "cloudfront-js-1.0"
+  comment = "Provides api location for public front-end"
+  publish = true
+  code    = file("${path.module}/${var.target_env}/api-header-configuration.js")
+}
+
+
 #setup a cloudfront distribution to serve out the frontend files from s3 (github actions will push builds there)
 resource "aws_cloudfront_distribution" "s3_distribution" {
   origin {
@@ -69,8 +79,13 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
       query_string = false
 
       cookies {
-        forward = "none"
+        forward = "all"
       }
+    }
+
+    function_association {
+      event_type   = "viewer-request"
+      function_arn = aws_cloudfront_function.api-header-configuration-admin.arn
     }
 
     viewer_protocol_policy = "allow-all"
