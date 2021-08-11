@@ -35,6 +35,19 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
     }
   }
 
+  # This origin is for setting up the api to be accessible from the front-end domain
+  origin {
+    domain_name = var.api_gateway_domain
+    origin_id   = var.api_gateway_origin_id
+  }
+
+  ordered_cache_behavior {
+    path_pattern           = var.api_gateway_path_pattern
+    target_origin_id       = var.api_gateway_origin_id
+    compress               = true
+    viewer_protocol_policy = "redirect-to-https"
+  }
+
   enabled             = true
   is_ipv6_enabled     = true
   default_root_object = "index.html"
@@ -101,7 +114,7 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
     viewer_protocol_policy = "redirect-to-https"
   }
 
-  price_class = "PriceClass_200"
+  price_class = "PriceClass_100"
 
   restrictions {
     geo_restriction {
